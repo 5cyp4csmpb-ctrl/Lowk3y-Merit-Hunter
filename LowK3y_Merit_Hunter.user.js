@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LowK3y Merit Hunter
 // @namespace    https://github.com/5cyp4csmpb-ctrl
-// @version      0.3.4
+// @version      0.3.5
 // @description  Read-only Torn merit and award explorer for Torn PDA
 // @author       LowK3y Industries
 // @match        https://www.torn.com/*
@@ -21,7 +21,7 @@ const css=document.createElement('style');
 css.textContent='#lowmh,#lowmh *{box-sizing:border-box}#lowmh{position:fixed;inset:5% 3%;z-index:2147483646;background:#101b28;color:#eaf8ff;border:1px solid #30c9eb;border-radius:15px;display:none;flex-direction:column;font:14px system-ui;box-shadow:0 8px 40px #000c}#lowmh.open{display:flex}#lowmh header{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#1c2c3c;border-radius:15px 15px 0 0}#lowmh main{padding:12px;overflow:auto;flex:1}#lowmh button{background:#23425a;color:white;border:1px solid #45748a;padding:9px;border-radius:8px;margin:3px}#lowmh input{width:100%;background:#0b1420;color:white;padding:12px;border:1px solid #527487;border-radius:8px}#lowmh .award{padding:10px;border:1px solid #345268;border-radius:9px;margin:8px 0;background:#182b3a}#lowmh small{color:#a8c0cf}#lowmh-status{padding:8px 12px;color:#a9dcea;background:#1a2c3b}#lowmh-launch{position:fixed;right:8px;top:48%;z-index:2147483645;border-radius:13px;background:#101b28;color:#80e6ff;border:1px solid #30c9eb;padding:12px;font-weight:bold}';
 document.head.appendChild(css);
 const launch=document.createElement('button');launch.id='lowmh-launch';launch.textContent='🎯 MH';document.body.appendChild(launch);
-const panel=document.createElement('section');panel.id='lowmh';panel.innerHTML='<header><strong>🎯 LowK3y Merit Hunter v0.3.4</strong><button id="lowmh-close">✕</button></header><div id="lowmh-status">Read-only • API data</div><main id="lowmh-body"></main>';document.body.appendChild(panel);
+const panel=document.createElement('section');panel.id='lowmh';panel.innerHTML='<header><strong>🎯 LowK3y Merit Hunter v0.3.5</strong><button id="lowmh-close">✕</button></header><div id="lowmh-status">Read-only • API data</div><main id="lowmh-body"></main>';document.body.appendChild(panel);
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const status=x=>$('lowmh-status').textContent=x;
 function req(path){const url='https://api.torn.com/v2/'+path+(path.includes('?')?'&':'?')+'comment=LowK3yMeritHunter';return new Promise((resolve,reject)=>{const done=r=>{try{const d=JSON.parse(typeof r==='string'?r:r.responseText||r.body||'{}');if(d.error)throw Error(d.error.error||'API error');resolve(d)}catch(e){reject(e)}};if(typeof GM_xmlhttpRequest==='function')GM_xmlhttpRequest({method:'GET',url,headers:{Authorization:'ApiKey '+key},timeout:20000,onload:done,onerror:()=>reject(Error('Network error')),ontimeout:()=>reject(Error('Timeout'))});else fetch(url,{headers:{Authorization:'ApiKey '+key}}).then(r=>r.text()).then(done,reject)})}
@@ -35,21 +35,21 @@ function awardProgress(a){
 const desc=String(a.description||a.requirement||'').toLowerCase().replace(/,/g,'').trim();
 const raw=state.user.personalstats||{},ps=raw.stats||raw;
 const rules=[
-{re:/^(?:find|discover|collect) (\\d+) (?:items? )?in the city\\b/,keys:['cityfinds']},
-{re:/^(?:win|achieve) (\\d+) (?:attacks?|attack wins?)\\b/,keys:['attackswon']},
-{re:/^(?:use|spend) (\\d+) job points?\\b/,keys:['jobpointsused']},
-{re:/^(?:achieve|make|perform) (\\d+) (?:finishing )?hits? with slashing weapons?\\b/,keys:['slashinghits']},
-{re:/^(?:achieve|commit|complete|perform) (\\d+) theft crimes?\\b/,keys:['theftcrimes']},
-{re:/^(?:achieve|commit|complete|perform) (\\d+) other crimes?\\b/,keys:['othercrimes']},
-{re:/^(?:achieve|commit|complete|perform) (\\d+) (?:total )?crimes?\\b/,keys:['criminaloffenses']},
-{re:/^(?:achieve|perform|complete|make) (\\d+) (?:successful )?busts?\\b/,keys:['peoplebusted']},
-{re:/^(?:achieve|perform|complete|make) (\\d+) (?:successful )?revives?\\b/,keys:['revives']},
-{re:/^(?:achieve|perform|complete|make) (\\d+) (?:successful )?escapes?\\b/,keys:['escapes']},
-{re:/^(?:travel|fly) (\\d+) times?\\b/,keys:['traveltimes']},
-{re:/^(?:use|take) (\\d+) xanax\\b/,keys:['xantaken']},
-{re:/^(?:use|take) (\\d+) drugs?\\b/,keys:['drugsused']},
-{re:/^(?:win|achieve) (\\d+) (?:defends?|defense wins?)\\b/,keys:['defendswon']},
-{re:/^(?:achieve|make|perform) (\\d+) (?:successful )?muggings?\\b/,keys:['moneymugged'] ,disabled:true}
+{re:/^(?:find|discover|collect) (\d+) (?:items? )?in the city\b/,keys:['cityfinds']},
+{re:/^(?:win|achieve) (\d+) (?:attacks?|attack wins?)\b/,keys:['attackswon']},
+{re:/^(?:use|spend) (\d+) job points?\b/,keys:['jobpointsused']},
+{re:/^(?:achieve|make|perform) (\d+) (?:finishing )?hits? with slashing weapons?\b/,keys:['slashinghits']},
+{re:/^(?:achieve|commit|complete|perform) (\d+) theft crimes?\b/,keys:['theftcrimes']},
+{re:/^(?:achieve|commit|complete|perform) (\d+) other crimes?\b/,keys:['othercrimes']},
+{re:/^(?:achieve|commit|complete|perform) (\d+) (?:total )?crimes?\b/,keys:['criminaloffenses']},
+{re:/^(?:achieve|perform|complete|make) (\d+) (?:successful )?busts?\b/,keys:['peoplebusted']},
+{re:/^(?:achieve|perform|complete|make) (\d+) (?:successful )?revives?\b/,keys:['revives']},
+{re:/^(?:achieve|perform|complete|make) (\d+) (?:successful )?escapes?\b/,keys:['escapes']},
+{re:/^(?:travel|fly) (\d+) times?\b/,keys:['traveltimes']},
+{re:/^(?:use|take) (\d+) xanax\b/,keys:['xantaken']},
+{re:/^(?:use|take) (\d+) drugs?\b/,keys:['drugsused']},
+{re:/^(?:win|achieve) (\d+) (?:defends?|defense wins?)\b/,keys:['defendswon']},
+{re:/^(?:achieve|make|perform) (\d+) (?:successful )?muggings?\b/,keys:['moneymugged'] ,disabled:true}
 ];
 for(const rule of rules){if(rule.disabled)continue;const m=desc.match(rule.re);if(!m)continue;const target=Number(m[1]);const k=rule.keys.find(k=>Number.isFinite(ps[k])&&ps[k]>=0);if(!k||!Number.isFinite(target)||target<=0)return null;const value=ps[k];return {value,target,percent:Math.min(100,Math.max(0,100*value/target)),source:k}}
 return null;
