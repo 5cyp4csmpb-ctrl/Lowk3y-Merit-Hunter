@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LowK3y Merit Hunter
 // @namespace    https://github.com/5cyp4csmpb-ctrl
-// @version      0.3.2
+// @version      0.3.3
 // @description  Read-only Torn merit and award explorer for Torn PDA
 // @author       LowK3y Industries
 // @match        https://www.torn.com/*
@@ -21,7 +21,7 @@ const css=document.createElement('style');
 css.textContent='#lowmh,#lowmh *{box-sizing:border-box}#lowmh{position:fixed;inset:5% 3%;z-index:2147483646;background:#101b28;color:#eaf8ff;border:1px solid #30c9eb;border-radius:15px;display:none;flex-direction:column;font:14px system-ui;box-shadow:0 8px 40px #000c}#lowmh.open{display:flex}#lowmh header{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#1c2c3c;border-radius:15px 15px 0 0}#lowmh main{padding:12px;overflow:auto;flex:1}#lowmh button{background:#23425a;color:white;border:1px solid #45748a;padding:9px;border-radius:8px;margin:3px}#lowmh input{width:100%;background:#0b1420;color:white;padding:12px;border:1px solid #527487;border-radius:8px}#lowmh .award{padding:10px;border:1px solid #345268;border-radius:9px;margin:8px 0;background:#182b3a}#lowmh small{color:#a8c0cf}#lowmh-status{padding:8px 12px;color:#a9dcea;background:#1a2c3b}#lowmh-launch{position:fixed;right:8px;top:48%;z-index:2147483645;border-radius:13px;background:#101b28;color:#80e6ff;border:1px solid #30c9eb;padding:12px;font-weight:bold}';
 document.head.appendChild(css);
 const launch=document.createElement('button');launch.id='lowmh-launch';launch.textContent='🎯 MH';document.body.appendChild(launch);
-const panel=document.createElement('section');panel.id='lowmh';panel.innerHTML='<header><strong>🎯 LowK3y Merit Hunter v0.3.2</strong><button id="lowmh-close">✕</button></header><div id="lowmh-status">Read-only • API data</div><main id="lowmh-body"></main>';document.body.appendChild(panel);
+const panel=document.createElement('section');panel.id='lowmh';panel.innerHTML='<header><strong>🎯 LowK3y Merit Hunter v0.3.3</strong><button id="lowmh-close">✕</button></header><div id="lowmh-status">Read-only • API data</div><main id="lowmh-body"></main>';document.body.appendChild(panel);
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const status=x=>$('lowmh-status').textContent=x;
 function req(path){const url='https://api.torn.com/v2/'+path+(path.includes('?')?'&':'?')+'comment=LowK3yMeritHunter';return new Promise((resolve,reject)=>{const done=r=>{try{const d=JSON.parse(typeof r==='string'?r:r.responseText||r.body||'{}');if(d.error)throw Error(d.error.error||'API error');resolve(d)}catch(e){reject(e)}};if(typeof GM_xmlhttpRequest==='function')GM_xmlhttpRequest({method:'GET',url,headers:{Authorization:'ApiKey '+key},timeout:20000,onload:done,onerror:()=>reject(Error('Network error')),ontimeout:()=>reject(Error('Timeout'))});else fetch(url,{headers:{Authorization:'ApiKey '+key}}).then(r=>r.text()).then(done,reject)})}
@@ -42,6 +42,14 @@ function draw(){const q=$('lowmh-search').value.toLowerCase();if(tab==='diag'){c
 const shown=all.filter(a=>(tab==='missing'?!a.earned:tab==='honors'?a.type==='Honor':a.type==='Medal')).filter(a=>((a.name||a.title||'')+' '+(a.description||'')).toLowerCase().includes(q));
 $('lowmh-list').innerHTML='<p>'+shown.length+' awards shown</p>'+shown.slice(0,250).map(a=>{const p=awardProgress(a);return '<div class="award"><b>'+esc(a.name||a.title||a.type+' #'+a.id)+'</b> <small>'+a.type+(a.earned?' • earned':' • unearned')+'</small><p>'+esc(a.description||a.requirement||'')+'</p>'+(p?'<div style="display:flex;justify-content:space-between;color:#9bdff0;font-size:12px;margin:6px 0"><span>'+p.value.toLocaleString()+' / '+p.target.toLocaleString()+'</span><span>'+p.percent.toFixed(1)+'%</span></div><div style="height:10px;background:#0b1722;border-radius:10px;overflow:hidden"><div style="height:100%;width:'+p.percent+'%;background:linear-gradient(90deg,#147caa,#3de0ee);border-radius:10px"></div></div><small>'+(Math.max(0,p.target-p.value)).toLocaleString()+' remaining</small>':'<small>Progress not available from current API statistics</small>')+'</div>'}).join('')+(shown.length>250?'<small>Showing first 250; narrow your search.</small>':'')}
 draw()}
-launch.onclick=()=>{panel.classList.toggle('open');if(panel.classList.contains('open'))render()};$('lowmh-close').onclick=()=>panel.classList.remove('open');
+const POS='lowk3y_mh_launcher_position';
+try{const p=JSON.parse(localStorage.getItem(POS)||'null');if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)){launch.style.left=Math.max(0,Math.min(innerWidth-55,p.x))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-45,p.y))+'px';launch.style.right='auto'}}catch(e){}
+let drag=null,suppressClick=false;
+launch.style.touchAction='none';launch.style.userSelect='none';
+launch.addEventListener('pointerdown',e=>{if(e.button!==0)return;const r=launch.getBoundingClientRect();drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:r.left,y:r.top,moved:false};launch.setPointerCapture(e.pointerId)});
+launch.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;if(Math.hypot(dx,dy)>7)drag.moved=true;if(!drag.moved)return;e.preventDefault();launch.style.left=Math.max(0,Math.min(innerWidth-launch.offsetWidth,drag.x+dx))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-launch.offsetHeight,drag.y+dy))+'px';launch.style.right='auto'});
+launch.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;if(drag.moved){suppressClick=true;localStorage.setItem(POS,JSON.stringify({x:parseFloat(launch.style.left),y:parseFloat(launch.style.top)}))}drag=null});
+launch.addEventListener('pointercancel',()=>{drag=null});
+launch.onclick=()=>{if(suppressClick){suppressClick=false;return}panel.classList.toggle('open');if(panel.classList.contains('open'))render()};$('lowmh-close').onclick=()=>panel.classList.remove('open');
 try{state=JSON.parse(localStorage.getItem(CACHE)||'null')}catch(e){}
 })();
